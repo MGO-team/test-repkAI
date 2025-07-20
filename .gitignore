@@ -1,6 +1,6 @@
 BindingDB_singlechain.csv.gz
 *.pdf
-*.ipynb
+playground*
 data
 .env
 __*
