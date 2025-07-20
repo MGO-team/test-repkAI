@@ -73,11 +73,11 @@ def download_ftp_files(ftp_index_url: str, output_dir: Path, include_exts=None):
     }
 
 
-def extract_relevant_patents_from_pq(
+def extract_relevant_patents(
     path_to_parquet: str,
     random_chunks: list[int] | None = None,
 ) -> pd.DataFrame:
-    """Function to automatically read data from parquet. Supports random chunks subsets"""
+    """Function to automatically read and filter relevant data from parquet. Supports random chunks subsets"""
     pf = pq.ParquetFile(path_to_parquet)
     dfs = []
     if random_chunks is not None:
@@ -95,5 +95,52 @@ def extract_relevant_patents_from_pq(
         chm = chunk[mask]
         dfs.append(chm)
         print(f"chunk{i}, mask_len={len(chm)}, dfs={len(dfs)}")
+
+    return pd.concat(dfs, ignore_index=True)
+
+
+def extract_compound_ids_by_patent(
+    path_to_parquet: str,
+    target_patent_ids: list[int],
+) -> dict[int, list[int]]:
+    """Function to automatically read and filter relevant compound_ids from parquet"""
+    pf = pq.ParquetFile(path_to_parquet)
+    patent_id_set = set(target_patent_ids)
+    dfs = []
+
+    chunks = range(pf.num_row_groups)
+
+    for i in chunks:
+        chunk = pf.read_row_group(i, columns=["patent_id", "compound_id"])
+        df = chunk.to_pandas()
+
+        filtered = df[df["patent_id"].isin(patent_id_set)]
+        if len(filtered) > 0:
+            print(f"chunk{i}, mask_len={len(filtered)}, dfs={len(dfs)}")
+            dfs.append(filtered)
+
+    return pd.concat(dfs, ignore_index=True)
+
+
+def extract_compounds_by_ids(
+    path_to_parquet: str,
+    target_compound_ids: list[int],
+) -> dict[int, list[int]]:
+    """Function to automatically read and filter relevant compounds from parquet"""
+
+    pf = pq.ParquetFile(path_to_parquet)
+    compounds_id_set = set(target_compound_ids)
+    dfs = []
+
+    chunks = range(pf.num_row_groups)
+
+    for i in chunks:
+        chunk = pf.read_row_group(i)
+        df = chunk.to_pandas()
+
+        filtered = df[df["id"].isin(compounds_id_set)]
+        if len(filtered) > 0:
+            print(f"chunk{i}, mask_len={len(filtered)}, dfs={len(dfs)}")
+            dfs.append(filtered)
 
     return pd.concat(dfs, ignore_index=True)
