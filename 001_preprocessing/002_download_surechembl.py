@@ -1,4 +1,4 @@
-from utils import download_ftp_files
+from preprocessing import download_ftp_files
 
 if __name__ == "__main__":
     ftp_index_url = (
