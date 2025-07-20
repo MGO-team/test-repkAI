@@ -1,0 +1,8 @@
+name: patent_parser
+channels:
+  - defaults
+dependencies:
+  - conda-forge::rdkit
+  - conda-forge::tqdm
+  - anaconda::requests
+  - anaconda::beautifulsoup4 
