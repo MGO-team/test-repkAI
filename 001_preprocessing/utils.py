@@ -1,11 +1,14 @@
 from pathlib import Path
+
+import pandas as pd
+import pyarrow.parquet as pq
 import requests
 from bs4 import BeautifulSoup
 from urllib.parse import urljoin
 
 
 def download_ftp_files(ftp_index_url: str, output_dir: Path, include_exts=None):
-    """Download sure"""
+    """Download all files from ftp recursively"""
     output_dir = Path(output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
 
@@ -68,3 +71,29 @@ def download_ftp_files(ftp_index_url: str, output_dir: Path, include_exts=None):
         "skipped_existing": skipped_existing,
         "skipped_filtered": skipped_filtered,
     }
+
+
+def extract_relevant_patents_from_pq(
+    path_to_parquet: str,
+    random_chunks: list[int] | None = None,
+) -> pd.DataFrame:
+    """Function to automatically read data from parquet. Supports random chunks subsets"""
+    pf = pq.ParquetFile(path_to_parquet)
+    dfs = []
+    if random_chunks is not None:
+        chunks = random_chunks
+    else:
+        chunks = range(pf.num_row_groups)
+
+    for i in chunks:
+        chunk = pf.read_row_group(
+            i,
+        ).to_pandas()
+        mask = chunk["ipc"].astype(str).str.contains(
+            "A61K|A61P", regex=True, na=False
+        ) | chunk["cpc"].astype(str).str.contains("A61K|A61P", regex=True, na=False)
+        chm = chunk[mask]
+        dfs.append(chm)
+        print(f"chunk{i}, mask_len={len(chm)}, dfs={len(dfs)}")
+
+    return pd.concat(dfs, ignore_index=True)
