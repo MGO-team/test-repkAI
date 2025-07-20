@@ -1,4 +1,6 @@
 BindingDB_singlechain.csv.gz
 *.pdf
+playground*
 data
 .env
+__*
