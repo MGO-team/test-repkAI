@@ -1,0 +1,34 @@
+"""This file will contain all configs for patent parser"""
+
+from pathlib import Path
+
+# Paths
+DATA_FOLDER = "../data"
+CHECKPOINTS_FOLDER = Path(DATA_FOLDER, "checkpoints_random_chunks")
+
+CHEMBL_FOLDER = Path(DATA_FOLDER, "ChEMBL")
+SURE_CHEMBL_FOLDER = Path(DATA_FOLDER, "SureChEMBL")
+
+PC_MAP_PQ = Path(SURE_CHEMBL_FOLDER, "patent_compound_map.parquet")
+COMPOUNDS_PQ = Path(SURE_CHEMBL_FOLDER, "compounds.parquet")
+PATENTS_PQ = Path(SURE_CHEMBL_FOLDER, "patents.parquet")
+
+# URLs
+CHEMBL_URL = "https://ftp.ebi.ac.uk/pub/databases/chembl/ChEMBLdb/latest/"
+SURE_CHEMBL_URL = (
+    "https://ftp.ebi.ac.uk/pub/databases/chembl/SureChEMBL/bulk_data/latest/"
+)
+
+# DB params
+DOWNLOAD_CHEMBL = False
+DOWNLOAD_SURE_CHEMBL = False
+
+# Preprocessing
+### Set random subsample
+SEED = 42
+USE_RANDOM_CHUNKS = True
+N_RANDOM_CHUNKS = 10
+N_RANDOM_PATENTS = 40
+
+### Use defined chunks
+CHUNKS: list[int] | None = []

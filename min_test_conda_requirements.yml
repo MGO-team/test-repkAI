@@ -5,4 +5,5 @@ dependencies:
   - conda-forge::rdkit
   - conda-forge::tqdm
   - anaconda::requests
-  - anaconda::beautifulsoup4 
+  - anaconda::beautifulsoup4
+  - conda-forge::pyarrow 
