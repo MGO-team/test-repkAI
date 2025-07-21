@@ -3,8 +3,8 @@
 from pathlib import Path
 
 # Paths
-DATA_FOLDER = "../data"
-CHECKPOINTS_FOLDER = Path(DATA_FOLDER, "checkpoints_random_chunks")
+DATA_FOLDER = "data"
+CHECKPOINTS_FOLDER = Path(DATA_FOLDER, "checkpoints_chunk_228")
 
 CHEMBL_FOLDER = Path(DATA_FOLDER, "ChEMBL")
 SURE_CHEMBL_FOLDER = Path(DATA_FOLDER, "SureChEMBL")
@@ -26,9 +26,12 @@ DOWNLOAD_SURE_CHEMBL = False
 # Preprocessing
 ### Set random subsample
 SEED = 42
-USE_RANDOM_CHUNKS = True
+USE_RANDOM_CHUNKS = False
 N_RANDOM_CHUNKS = 10
 N_RANDOM_PATENTS = 40
 
 ### Use defined chunks
-CHUNKS: list[int] | None = []
+# CHUNKS: list[int] | None = [228]
+
+# Patent retrieval
+HEADERS = {"User-Agent": "Mozilla/5.0"}
