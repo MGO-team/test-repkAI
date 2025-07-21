@@ -228,3 +228,39 @@ def run_preprocessing(
         sep="\t",
         index=False,
     )
+
+
+def extract_patents_only(
+    chunks: list[int] | None,
+    checkpoints: Path,
+    patents_pq_file: Path,
+    seed: int,
+    use_random_chunks: bool,
+    n_random_chuncks: int,
+    n_random_patents: int,
+) -> None:
+    print("Preprocessing params:")
+    print(locals())
+
+    preprocessing_checkpoints = Path(checkpoints, "preprocessing")
+    preprocessing_checkpoints.mkdir(exist_ok=True, parents=True)
+
+    if (not chunks or chunks is None) and use_random_chunks:
+        will_use_random_chuncks = True
+        random.seed(seed)
+        n_random_chunks = n_random_chuncks
+        chunks = [random.randint(1, 200) for _ in range(n_random_chunks)]
+        print(f"Will use random chunks: {chunks}")
+    elif (chunks and chunks is not None) and not use_random_chunks:
+        will_use_random_chuncks = False
+        print(f"Will use provided chunks: {chunks}")
+    else:
+        raise ChunksUsageError("Either do not provide chunks or do not use random")
+
+    # Extract patents with codes
+    patents = extract_relevant_patents(patents_pq_file, chunks)
+    if will_use_random_chuncks:
+        patents = patents.sample(n=n_random_patents, random_state=seed)
+    patents.to_csv(
+        Path(preprocessing_checkpoints, "patents_subset.tsv"), sep="\t", index=False
+    )

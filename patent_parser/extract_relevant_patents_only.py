@@ -1,13 +1,13 @@
-from preprocessing import run_preprocessing  # , download_ftp_files
+from preprocessing import extract_patents_only  # , download_ftp_files
 
 # from collect_patents import collect_pdf_links, download_patent_data
 from config import (
-    # DATA_FOLDER,
-    CHECKPOINTS_FOLDER,
+    DATA_FOLDER,
+    # CHECKPOINTS_FOLDER,
     # CHEMBL_FOLDER,
     # SURE_CHEMBL_FOLDER,
-    PC_MAP_PQ,
-    COMPOUNDS_PQ,
+    # PC_MAP_PQ,
+    # COMPOUNDS_PQ,
     PATENTS_PQ,
     # CHEMBL_URL,
     # SURE_CHEMBL_URL,
@@ -39,11 +39,11 @@ from config import (
 
 print("Starting preprocessing...")
 for chunk in range(0, 1000):
-    run_preprocessing(
+    extract_patents_only(
         chunks=[chunk],
-        patent_compound_map_pq_file=PC_MAP_PQ,
-        compounds_pq_file=COMPOUNDS_PQ,
-        checkpoints=CHECKPOINTS_FOLDER,
+        # patent_compound_map_pq_file=PC_MAP_PQ,
+        # compounds_pq_file=COMPOUNDS_PQ,
+        checkpoints=f"{DATA_FOLDER}/patents_only/checkpoints_chunk_{chunk}",
         patents_pq_file=PATENTS_PQ,
         seed=SEED,
         use_random_chunks=USE_RANDOM_CHUNKS,
