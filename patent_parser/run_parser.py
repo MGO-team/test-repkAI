@@ -1,5 +1,5 @@
 from preprocessing import run_preprocessing, download_ftp_files
-
+from collect_patents import collect_pdf_links, download_patent_data
 from config import (
     # DATA_FOLDER,
     CHECKPOINTS_FOLDER,
@@ -17,6 +17,7 @@ from config import (
     N_RANDOM_CHUNKS,
     N_RANDOM_PATENTS,
     CHUNKS,
+    # HEADERS,
 )
 
 
@@ -47,5 +48,11 @@ run_preprocessing(
     n_random_chuncks=N_RANDOM_CHUNKS,
     n_random_patents=N_RANDOM_PATENTS,
 )
+
+print("Collecting pdf links...")
+links_to_pdf = collect_pdf_links(CHECKPOINTS_FOLDER)
+
+print("Downloading patents pdfs...")
+download_patent_data(links_to_pdf, CHECKPOINTS_FOLDER)
 
 print("Finished parsing!")
