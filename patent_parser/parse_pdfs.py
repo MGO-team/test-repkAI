@@ -1,10 +1,15 @@
-import pdftotext
+import logging
+
 from pathlib import Path
 from dataclasses import dataclass, field
 from typing import Any
 
-INITIAL_PDF_CHUNK_SIZE = 10000
-CHUNK_OVERLAPS = 3
+import pdftotext
+
+from config import INITIAL_PDF_CHUNK_SIZE, CHUNK_OVERLAPS
+
+
+logger = logging.getLogger(__name__)
 
 
 class PdfReadingError(Exception):
@@ -71,8 +76,8 @@ def convert_pdf_to_text(path_to_pdf: Path | str):
         try:
             pdf_text = pdftotext.PDF(f)
         except Exception as e:
-            print("error reading pdf")
-            print(e)
+            logger.warning(f"error reading pdf {path_to_pdf}")
+            logger.warning(e)
             raise PdfReadingError
         return "".join([page for page in pdf_text])
 
@@ -81,18 +86,18 @@ def parse_pdf_to_patent(pdf_path: Path):
     """Reads patent pdf to patent object"""
     try:
         return Patent(
-            name=pdf_path.name,
+            name=pdf_path.stem,
             country=pdf_path.name[:2],
             local_path=pdf_path,
             full_text=convert_pdf_to_text(pdf_path),
         )
 
     except PdfReadingError as e:
-        print(e)
-        print(f"error reading {pdf_path.name}")
-        print(f"will return with empty full text {pdf_path.name}")
+        logger.warning(e)
+        logger.warning(f"error reading {pdf_path.name}")
+        logger.warning(f"will return with empty full text {pdf_path.name}")
         return Patent(
-            name=pdf_path.name,
+            name=pdf_path.stem,
             country=pdf_path.name[:2],
             local_path=pdf_path,
         )
