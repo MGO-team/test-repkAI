@@ -1,48 +1,21 @@
-from preprocessing import extract_patents_only  # , download_ftp_files
+import logging
 
-# from collect_patents import collect_pdf_links, download_patent_data
+from preprocessing import extract_patents_only
 from config import (
     DATA_FOLDER,
-    # CHECKPOINTS_FOLDER,
-    # CHEMBL_FOLDER,
-    # SURE_CHEMBL_FOLDER,
-    # PC_MAP_PQ,
-    # COMPOUNDS_PQ,
     PATENTS_PQ,
-    # CHEMBL_URL,
-    # SURE_CHEMBL_URL,
-    # DOWNLOAD_CHEMBL,
-    # DOWNLOAD_SURE_CHEMBL,
     SEED,
     USE_RANDOM_CHUNKS,
     N_RANDOM_CHUNKS,
     N_RANDOM_PATENTS,
-    # CHUNKS,
-    # HEADERS,
 )
 
+logger = logging.getLogger(__name__)
 
-# if DOWNLOAD_CHEMBL:
-#     print("Downloading ChEMBL...")
-#     download_res_ChEMBL = download_ftp_files(CHEMBL_URL, CHEMBL_FOLDER)
-#     print(download_res_ChEMBL)
-# else:
-#     print("Skipping ChEMBL download...")
-
-
-# if DOWNLOAD_SURE_CHEMBL:
-#     print("Downloading SureChEMBL...")
-#     download_res_SureChEMBL = download_ftp_files(SURE_CHEMBL_URL, SURE_CHEMBL_FOLDER)
-#     print(download_res_SureChEMBL)
-# else:
-#     print("Skipping SureChEMBL download...")
-
-print("Starting preprocessing...")
+logger.info("Starting processing...")
 for chunk in range(0, 1000):
     extract_patents_only(
         chunks=[chunk],
-        # patent_compound_map_pq_file=PC_MAP_PQ,
-        # compounds_pq_file=COMPOUNDS_PQ,
         checkpoints=f"{DATA_FOLDER}/patents_only/checkpoints_chunk_{chunk}",
         patents_pq_file=PATENTS_PQ,
         seed=SEED,
@@ -50,11 +23,3 @@ for chunk in range(0, 1000):
         n_random_chuncks=N_RANDOM_CHUNKS,
         n_random_patents=N_RANDOM_PATENTS,
     )
-
-# print("Collecting pdf links...")
-# links_to_pdf = collect_pdf_links(CHECKPOINTS_FOLDER)
-
-# print("Downloading patents pdfs...")
-# download_patent_data(links_to_pdf, CHECKPOINTS_FOLDER)
-
-# print("Finished parsing!")

@@ -1,3 +1,4 @@
+import logging
 import time
 import random
 
@@ -11,6 +12,8 @@ from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
 
 HEADERS = {"User-Agent": "Mozilla/5.0"}
+
+logger = logging.getLogger(__name__)
 
 
 def get_pdf_link(
@@ -33,6 +36,7 @@ def get_pdf_link(
     session.mount("http://", adapter)
 
     query = query.replace("-", "")
+    logger.info(f"collectng pdf link for: {query}")
 
     url = f"https://patents.google.com/patent/{query}/en?oq={query}"
 
@@ -40,8 +44,10 @@ def get_pdf_link(
     if resp.status_code == 200:
         soup = BeautifulSoup(resp.text, "html.parser")
         tag = soup.find("meta", attrs={"name": "citation_pdf_url"})
+        logger.info(f"success collectng pdf link for: {query}")
         return tag["content"] if tag else {"error": "pdf_url not found"}
     else:
+        logger.info(f"error collectng pdf link for: {query}")
         return {"error": resp.status_code}
 
 
@@ -53,7 +59,7 @@ def download_pdf(
     """Download pdf"""
 
     try:
-        print(url)
+        logger.debug(url)
         filename = folder / Path(url).name
 
         response = requests.get(url, headers=headers, stream=True, timeout=15)
@@ -61,13 +67,13 @@ def download_pdf(
             with filename.open("wb") as f:
                 for chunk in response.iter_content(chunk_size=1024):
                     f.write(chunk)
-            print(f"success: downloaded to {filename}")
+            logger.info(f"success: downloaded to {filename}")
             return "success"
         else:
-            print({"error": response.status_code, "filename": filename})
+            logger.info({"error": response.status_code, "filename": filename})
             return {"error": response.status_code}
     except requests.RequestException as e:
-        print({"error": e})
+        logger.info({"error": e})
         return {"error": e}
 
 

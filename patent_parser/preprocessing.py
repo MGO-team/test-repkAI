@@ -1,3 +1,4 @@
+import logging
 import random
 
 from pathlib import Path
@@ -9,6 +10,9 @@ from bs4 import BeautifulSoup
 from urllib.parse import urljoin
 
 
+logger = logging.getLogger(__name__)
+
+
 class ChunksUsageError(Exception):
     pass
 
@@ -18,7 +22,7 @@ def download_ftp_files(ftp_index_url: str, output_dir: Path, include_exts=None):
     output_dir = Path(output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
 
-    print(f"Fetching index: {ftp_index_url}")
+    logger.info(f"Fetching index: {ftp_index_url}")
     resp = requests.get(ftp_index_url)
     resp.raise_for_status()
 
@@ -57,11 +61,11 @@ def download_ftp_files(ftp_index_url: str, output_dir: Path, include_exts=None):
         dest_path = output_dir / filename
 
         if dest_path.exists():
-            print(f"Skipping existing file: {filename}")
+            logger.info(f"Skipping existing file: {filename}")
             skipped_existing.append(filename)
             continue
 
-        print(f"Downloading: {filename}")
+        logger.info(f"Downloading: {filename}")
         with requests.get(file_url, stream=True) as r:
             r.raise_for_status()
             with dest_path.open("wb") as f:
@@ -69,7 +73,7 @@ def download_ftp_files(ftp_index_url: str, output_dir: Path, include_exts=None):
                     if chunk:
                         f.write(chunk)
 
-        print(f"Saved to: {dest_path}")
+        logger.info(f"Saved to: {dest_path}")
         downloaded.append(filename)
 
     return {
@@ -100,7 +104,7 @@ def extract_relevant_patents(
         ) | chunk["cpc"].astype(str).str.contains("A61K|A61P", regex=True, na=False)
         chm = chunk[mask]
         dfs.append(chm)
-        print(f"chunk{i}, mask_len={len(chm)}, dfs={len(dfs)}")
+        logger.info(f"chunk{i}, mask_len={len(chm)}, dfs={len(dfs)}")
 
     return pd.concat(dfs, ignore_index=True)
 
@@ -122,7 +126,7 @@ def extract_compound_ids_by_patent(
 
         filtered = df[df["patent_id"].isin(patent_id_set)]
         if len(filtered) > 0:
-            print(f"chunk{i}, mask_len={len(filtered)}, dfs={len(dfs)}")
+            logger.info(f"chunk{i}, mask_len={len(filtered)}, dfs={len(dfs)}")
             dfs.append(filtered)
 
     return pd.concat(dfs, ignore_index=True)
@@ -146,7 +150,7 @@ def extract_compounds_by_ids(
 
         filtered = df[df["id"].isin(compounds_id_set)]
         if len(filtered) > 0:
-            print(f"chunk{i}, mask_len={len(filtered)}, dfs={len(dfs)}")
+            logger.info(f"chunk{i}, mask_len={len(filtered)}, dfs={len(dfs)}")
             dfs.append(filtered)
 
     return pd.concat(dfs, ignore_index=True)
@@ -163,8 +167,8 @@ def run_preprocessing(
     n_random_chuncks: int,
     n_random_patents: int,
 ) -> None:
-    print("Preprocessing params:")
-    print(locals())
+    logger.info("Preprocessing params:")
+    logger.info(locals())
 
     preprocessing_checkpoints = Path(checkpoints, "preprocessing")
     preprocessing_checkpoints.mkdir(exist_ok=True, parents=True)
@@ -174,10 +178,10 @@ def run_preprocessing(
         random.seed(seed)
         n_random_chunks = n_random_chuncks
         chunks = [random.randint(1, 200) for _ in range(n_random_chunks)]
-        print(f"Will use random chunks: {chunks}")
+        logger.info(f"Will use random chunks: {chunks}")
     elif (chunks and chunks is not None) and not use_random_chunks:
         will_use_random_chuncks = False
-        print(f"Will use provided chunks: {chunks}")
+        logger.info(f"Will use provided chunks: {chunks}")
     else:
         raise ChunksUsageError("Either do not provide chunks or do not use random")
 
@@ -239,8 +243,8 @@ def extract_patents_only(
     n_random_chuncks: int,
     n_random_patents: int,
 ) -> None:
-    print("Preprocessing params:")
-    print(locals())
+    logger.info("Preprocessing params:")
+    logger.info(locals())
 
     preprocessing_checkpoints = Path(checkpoints, "preprocessing")
     preprocessing_checkpoints.mkdir(exist_ok=True, parents=True)
@@ -250,10 +254,10 @@ def extract_patents_only(
         random.seed(seed)
         n_random_chunks = n_random_chuncks
         chunks = [random.randint(1, 200) for _ in range(n_random_chunks)]
-        print(f"Will use random chunks: {chunks}")
+        logger.info(f"Will use random chunks: {chunks}")
     elif (chunks and chunks is not None) and not use_random_chunks:
         will_use_random_chuncks = False
-        print(f"Will use provided chunks: {chunks}")
+        logger.info(f"Will use provided chunks: {chunks}")
     else:
         raise ChunksUsageError("Either do not provide chunks or do not use random")
 
