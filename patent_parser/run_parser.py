@@ -1,7 +1,9 @@
 import logging
+from pathlib import Path
 from config_logging import setup_logging
 from preprocessing import run_preprocessing, download_ftp_files
 from collect_patents import collect_pdf_links, download_patent_data
+from parse_pdfs import parse_pdfs_in_dir
 from config import (
     # DATA_FOLDER,
     CHECKPOINTS_FOLDER,
@@ -61,6 +63,14 @@ def main():
 
     logger.info("Downloading patents pdfs...")
     download_patent_data(links_to_pdf, CHECKPOINTS_FOLDER)
+
+    logger.info("Reading pdfs...")
+    parse_pdfs_in_dir(
+        Path(
+            CHECKPOINTS_FOLDER,
+            "patent_pdfs",
+        )
+    )
 
     logger.info("Finished parsing!")
 
