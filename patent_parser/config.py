@@ -4,7 +4,11 @@ from pathlib import Path
 
 # Paths
 DATA_FOLDER = "data"
-CHECKPOINTS_FOLDER = Path(DATA_FOLDER, "checkpoints_random_123")
+CHECKPOINTS_FOLDER = Path(DATA_FOLDER, "checkpoints_random_dev_check")
+
+# Set up pdf reading
+INITIAL_PDF_CHUNK_SIZE = 10000
+CHUNK_OVERLAPS = 2
 
 CHEMBL_FOLDER = Path(DATA_FOLDER, "ChEMBL")
 SURE_CHEMBL_FOLDER = Path(DATA_FOLDER, "SureChEMBL")
@@ -27,13 +31,14 @@ DOWNLOAD_SURE_CHEMBL = True
 ### Set random subsample
 SEED = 123
 USE_RANDOM_CHUNKS = True
-N_RANDOM_CHUNKS = 15
-N_RANDOM_PATENTS = 50
+N_RANDOM_CHUNKS = 3
+N_RANDOM_PATENTS = 10
 
 ### Use defined chunks
 CHUNKS: list[int] | None = []
 
 # Patent retrieval
 HEADERS = {"User-Agent": "Mozilla/5.0"}
+
 
 LOG_DIR = Path(__file__).parent.parent / "logs"

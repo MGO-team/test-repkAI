@@ -7,3 +7,4 @@ dependencies:
   - anaconda::requests
   - anaconda::beautifulsoup4
   - conda-forge::pyarrow 
+  - conda install conda-forge::pdftotext 
