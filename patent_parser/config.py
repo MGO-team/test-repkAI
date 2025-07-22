@@ -4,7 +4,7 @@ from pathlib import Path
 
 # Paths
 DATA_FOLDER = "data"
-CHECKPOINTS_FOLDER = Path(DATA_FOLDER, "checkpoints_chunk_228")
+CHECKPOINTS_FOLDER = Path(DATA_FOLDER, "checkpoints_random_123")
 
 CHEMBL_FOLDER = Path(DATA_FOLDER, "ChEMBL")
 SURE_CHEMBL_FOLDER = Path(DATA_FOLDER, "SureChEMBL")
@@ -21,17 +21,19 @@ SURE_CHEMBL_URL = (
 
 # DB params
 DOWNLOAD_CHEMBL = False
-DOWNLOAD_SURE_CHEMBL = False
+DOWNLOAD_SURE_CHEMBL = True
 
 # Preprocessing
 ### Set random subsample
-SEED = 42
-USE_RANDOM_CHUNKS = False
-N_RANDOM_CHUNKS = 10
-N_RANDOM_PATENTS = 40
+SEED = 123
+USE_RANDOM_CHUNKS = True
+N_RANDOM_CHUNKS = 15
+N_RANDOM_PATENTS = 50
 
 ### Use defined chunks
-# CHUNKS: list[int] | None = [228]
+CHUNKS: list[int] | None = []
 
 # Patent retrieval
 HEADERS = {"User-Agent": "Mozilla/5.0"}
+
+LOG_DIR = Path(__file__).parent.parent / "logs"
