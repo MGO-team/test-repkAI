@@ -56,3 +56,5 @@ STEPS = [
     "download_patents",
     "parse_and_markup",
 ]
+
+CONTINUE_MARKUP = True
