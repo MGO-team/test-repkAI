@@ -10,3 +10,4 @@ dependencies:
   - conda-forge::pdftotext 
   - conda-forge::python-dotenv
   - conda-forge::openai
+  - anaconda::aiofiles

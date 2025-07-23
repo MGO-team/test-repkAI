@@ -121,3 +121,12 @@ def parse_pdfs_in_dir(path_to_dir: Path, limit: int | None = None) -> list[Paten
                 break
 
     return patent_list
+
+
+def parse_pdfs(pdf_paths: list[Path]) -> list[Patent]:
+    """Parse a list of PDF files into Patent objects"""
+    patent_list = []
+    for pdf_path in pdf_paths:
+        patent = parse_pdf_to_patent(pdf_path)
+        patent_list.append(patent)
+    return patent_list
