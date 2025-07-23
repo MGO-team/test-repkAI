@@ -40,6 +40,7 @@ class Patent:
     name: str
     country: str
     local_path: Path
+    has_binding_info: bool = False
     full_text: str = field(default="", repr=False)
     full_text_len: int = 0
     n_pages: int = 0
