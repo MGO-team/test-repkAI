@@ -90,12 +90,15 @@ content_template = (
 )
 
 
-def run_markup(checkpoints_folder: Path = CHECKPOINTS_FOLDER):  # TODO
-    patents = parse_pdfs_in_dir(Path(checkpoints_folder, "patent_pdfs"))
+def run_markup(checkpoints_folder: Path = CHECKPOINTS_FOLDER, limit=None):  # TODO
+    patents = parse_pdfs_in_dir(Path(checkpoints_folder, "patent_pdfs"), limit=limit)
 
     results = []
     CHECKPOINTS_FOLDER_BINDING = Path(checkpoints_folder, "json_binding_data")
     CHECKPOINTS_FOLDER_BINDING.mkdir(exist_ok=True, parents=True)
+
+    CHECKPOINTS_FOLDER_SUMMARY = Path(checkpoints_folder, "json_binding_summary")
+    CHECKPOINTS_FOLDER_SUMMARY.mkdir(exist_ok=True, parents=True)
 
     for patent in patents:
         for indx, chunk in enumerate(patent.chunks):
@@ -103,21 +106,26 @@ def run_markup(checkpoints_folder: Path = CHECKPOINTS_FOLDER):  # TODO
                 f"patent={patent.name}, chunk={indx}, pos={chunk.start, chunk.end}"
             )
             content = content_template + f"Here is a fragment of a patent: {chunk.text}"
-            # print(content)
             res = ask_llm(content, system_prompt, data_model=True)
-            # print(res)
             if "error" not in res:
                 if "has_binding_info" in res:
                     chunk.has_binding_info = res["has_binding_info"]
-
+                    if chunk.has_binding_info:
+                        patent.has_binding_info = True
                 else:
                     logger.info(f"some strange output in {patent.name}: {res.keys()}")
 
             logger.info(res)
-            results.append(res)
+        
+        results.append({"name": patent.name, "path": str(patent.local_path), "has_binding_info": patent.has_binding_info})
         patent_out = patent
         patent_out.local_path = str(patent_out.local_path)
         d = dataclasses.asdict(patent_out)
         filename = Path(CHECKPOINTS_FOLDER_BINDING, f"{patent.name}.json")
         with open(filename, "w") as f:
             json.dump(d, f, indent=4)
+
+    json_binding_summary_path = Path(CHECKPOINTS_FOLDER_SUMMARY, "binding_summary.json")
+    logger.info(f"Recording initial markup resulst to: {json_binding_summary_path}")
+    with open(json_binding_summary_path, "w") as f:
+            json.dump(results, f, indent=4)
