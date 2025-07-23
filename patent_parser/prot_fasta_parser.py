@@ -1,14 +1,14 @@
 import requests
 
-def get_uniprot_fasta_by_gene(gene_name):
+def get_uniprot_fasta_by_gene(protein_name):
 
     query_url = "https://rest.uniprot.org/uniprotkb/search"
-    query = f"(gene_exact:{gene_name}) AND (organism_name:Homo sapiens) AND reviewed:true"
+    query = f'(protein_name:"{protein_name}") AND (organism_name:"Homo sapiens") AND reviewed:true'
     params = {"query": query, "format": "json", "size": 1, "fields": "accession"}
     r = requests.get(query_url, params=params)
 
     if not r.ok or not r.json()["results"]:
-        raise RuntimeError(f"Accession not found for gene {gene_name}")
+        raise RuntimeError(f"Accession not found for gene {protein_name}")
 
     accession = r.json()["results"][0]["primaryAccession"]
 
