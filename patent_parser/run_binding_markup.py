@@ -89,11 +89,11 @@ content_template = (
 )
 
 
-def run_markup():  # TODO
-    patents = parse_pdfs_in_dir(Path(CHECKPOINTS_FOLDER, "patent_pdfs"))
+def run_markup(checkpoints_folder: Path = CHECKPOINTS_FOLDER):  # TODO
+    patents = parse_pdfs_in_dir(Path(checkpoints_folder, "patent_pdfs"))
 
     results = []
-    CHECKPOINTS_FOLDER_BINDING = Path(CHECKPOINTS_FOLDER, "json_binding_data")
+    CHECKPOINTS_FOLDER_BINDING = Path(checkpoints_folder, "json_binding_data")
     CHECKPOINTS_FOLDER_BINDING.mkdir(exist_ok=True, parents=True)
 
     for patent in patents:
