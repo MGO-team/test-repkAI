@@ -7,7 +7,8 @@ Run `conda env create -f min_test_conda_requirements.yml`. This will create a ne
 
 ## Usage
 
-Go to `patent_parser/config.py` file and edit settings to correct. Then just run main execution script with `python patent_parser/run_parser.py`
+1) Go to `patent_parser/config.py` file and edit settings to correct. Then just run main execution script with `python patent_parser/run_parser.py`
+2) Edit `.env_example` file according to your data and rename it to `.env`
 
 ## Downloads
 
