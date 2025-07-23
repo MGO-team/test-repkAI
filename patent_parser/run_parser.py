@@ -32,7 +32,7 @@ from config import (
     CHUNKS,
     USE_PARALLEL,
     BATCH_SIZE,
-    USE_DOWNLOADED_PATENTS
+    USE_DOWNLOADED_PATENTS,
 )
 
 
@@ -72,8 +72,6 @@ def main():
     else:
         logger.info("Skipping downloading and preprocessing based on config...")
 
-    
-
     if not USE_DOWNLOADED_PATENTS:
         logger.info("Collecting pdf links...")
         links_to_pdf = collect_pdf_links(CHECKPOINTS_FOLDER)
@@ -105,13 +103,17 @@ def main():
             if not USE_PARALLEL:
                 run_markup(patents=patents_batch, CHECKPOINTS_FOLDER=CHECKPOINTS_FOLDER)
             else:
-                loop.run_until_complete(run_markup_async(patents=patents_batch, checkpoints_folder=CHECKPOINTS_FOLDER))
+                loop.run_until_complete(
+                    run_markup_async(
+                        patents=patents_batch, checkpoints_folder=CHECKPOINTS_FOLDER
+                    )
+                )
     finally:
         if USE_PARALLEL:
             loop.close()
 
-
     logger.info("Finished parsing!")
+
 
 if __name__ == "__main__":
     main()

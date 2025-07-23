@@ -14,7 +14,7 @@ def main():
     logger = logging.getLogger(__name__)
 
     logger.info("Marking regions of interest...")
-    
+
     asyncio.run(run_markup_async(checkpoints_folder=CHECKPOINTS_FOLDER))
 
     logger.info("Finished parsing!")

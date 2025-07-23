@@ -1,7 +1,14 @@
 import logging
 import logging.config
+
+from datetime import datetime
 from pathlib import Path
 from config import LOG_DIR
+
+
+now = datetime.now()
+formatted_datetime = now.strftime("%Y%m%d%H%M")
+
 
 if not LOG_DIR or LOG_DIR is None:
     LOG_DIR = Path(__file__).parent / "logs"
@@ -23,7 +30,7 @@ LOGGING_CONFIG = {
         },
         "file": {
             "class": "logging.FileHandler",
-            "filename": LOG_DIR / "parser.log",
+            "filename": LOG_DIR / f"{formatted_datetime}_parser.log",
             "formatter": "standard",
             "level": "DEBUG",
         },

@@ -1,4 +1,4 @@
-BindingDB_singlechain.csv.gz
+BindingDB_singlechain*.csv.gz
 *.pdf
 playground*
 data
