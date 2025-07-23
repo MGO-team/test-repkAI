@@ -46,7 +46,13 @@ MAX_CONCURRENT_REQUESTS = 6
 USE_PARALLEL = True
 BATCH_SIZE = 20
 
-USE_DOWNLOADED_PATENTS = True
-
-
 LOG_DIR = Path(__file__).parent.parent / "logs"
+
+STEPS = [
+    "download_chembl",
+    "download_surechembl",
+    "preprocessing",
+    "collect_pdf_links",
+    "download_patents",
+    "parse_and_markup",
+]
