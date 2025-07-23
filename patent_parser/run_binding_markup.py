@@ -10,7 +10,7 @@ from openai import OpenAI
 from pathlib import Path
 from typing import Any
 
-from parse_pdfs import parse_pdfs_in_dir
+from parse_pdfs import Patent
 from config import CHECKPOINTS_FOLDER
 
 logger = logging.getLogger(__name__)
@@ -90,9 +90,7 @@ content_template = (
 )
 
 
-def run_markup(checkpoints_folder: Path = CHECKPOINTS_FOLDER, limit=None):  # TODO
-    patents = parse_pdfs_in_dir(Path(checkpoints_folder, "patent_pdfs"), limit=limit)
-
+def run_markup(patents: list[Patent], checkpoints_folder: Path = CHECKPOINTS_FOLDER, limit=None):  # TODO
     results = []
     CHECKPOINTS_FOLDER_BINDING = Path(checkpoints_folder, "json_binding_data")
     CHECKPOINTS_FOLDER_BINDING.mkdir(exist_ok=True, parents=True)
