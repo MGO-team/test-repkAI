@@ -9,6 +9,7 @@ from dotenv import load_dotenv
 from pathlib import Path
 from typing import Any
 from openai import AsyncOpenAI
+import aiofiles
 
 from parse_pdfs import Patent
 from config import CHECKPOINTS_FOLDER, MAX_CONCURRENT_REQUESTS
@@ -20,7 +21,8 @@ API_KEY = os.getenv("LLM_API_KEY")
 BASE_URL = os.getenv("LLM_BASE_URL")
 MODEL = os.getenv("MODEL")
 
-semaphore = asyncio.Semaphore(MAX_CONCURRENT_REQUESTS)
+api_semaphore = asyncio.Semaphore(MAX_CONCURRENT_REQUESTS)
+file_semaphore = asyncio.Semaphore(100)
 
 async def ask_llm_async(
     content,
@@ -33,7 +35,7 @@ async def ask_llm_async(
 ):
     client = AsyncOpenAI(base_url=base_url, api_key=api_key)
 
-    async with semaphore:
+    async with api_semaphore:  # Limit concurrent API requests
         for attempt in range(n_retries_response + 1):
             try:
                 response = await client.chat.completions.create(
@@ -93,6 +95,13 @@ async def process_chunk(patent, chunk, indx):
     return res
 
 
+async def save_patent_json(filename, data):
+    """Async function to save patent data with file descriptor limiting using aiofiles"""
+    async with file_semaphore:  # Limit concurrent file operations
+        async with aiofiles.open(filename, "w") as f:
+            await f.write(json.dumps(data, indent=4))
+
+
 async def run_markup_async(patents: list[Patent], checkpoints_folder: Path = CHECKPOINTS_FOLDER, limit=None):
     results = []
     CHECKPOINTS_FOLDER_BINDING = Path(checkpoints_folder, "json_binding_data")
@@ -112,6 +121,7 @@ async def run_markup_async(patents: list[Patent], checkpoints_folder: Path = CHE
 
     await asyncio.gather(*tasks)
 
+    save_tasks = []
     for patent in patents:
         results.append({
             "name": patent.name,
@@ -123,10 +133,15 @@ async def run_markup_async(patents: list[Patent], checkpoints_folder: Path = CHE
         patent_out.local_path = str(patent_out.local_path)
         d = dataclasses.asdict(patent_out)
         filename = Path(CHECKPOINTS_FOLDER_BINDING, f"{patent.name}.json")
-        with open(filename, "w") as f:
-            json.dump(d, f, indent=4)
+        
+        save_task = save_patent_json(filename, d)
+        save_tasks.append(save_task)
+
+    await asyncio.gather(*save_tasks)
 
     json_binding_summary_path = Path(CHECKPOINTS_FOLDER_SUMMARY, "binding_summary.json")
     logger.info(f"Recording initial markup results to: {json_binding_summary_path}")
-    with open(json_binding_summary_path, "w") as f:
-        json.dump(results, f, indent=4)
+    
+    async with file_semaphore:  # Limit concurrent file operations
+        async with aiofiles.open(json_binding_summary_path, "w") as f:
+            await f.write(json.dumps(results, indent=4))

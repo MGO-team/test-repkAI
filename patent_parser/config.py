@@ -41,7 +41,7 @@ CHUNKS: list[int] | None = []
 HEADERS = {"User-Agent": "Mozilla/5.0"}
 
 # Requests LLM
-MAX_CONCURRENT_REQUESTS = 8
+MAX_CONCURRENT_REQUESTS = 6
 USE_PARALLEL = True
 BATCH_SIZE = 20
 
