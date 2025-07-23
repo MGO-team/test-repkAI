@@ -110,12 +110,25 @@ async def save_patent_json(filename, data):
 async def run_markup_async(
     patents: list[Patent],
     checkpoints_folder: Path = CHECKPOINTS_FOLDER,
+    continue_markup: bool = False,  # Added continue_markup parameter
 ):
-    # results = []
     CHECKPOINTS_FOLDER_BINDING = Path(checkpoints_folder, "json_binding_data")
     CHECKPOINTS_FOLDER_BINDING.mkdir(exist_ok=True, parents=True)
     CHECKPOINTS_FOLDER_SUMMARY = Path(checkpoints_folder, "json_binding_summary")
     CHECKPOINTS_FOLDER_SUMMARY.mkdir(exist_ok=True, parents=True)
+
+    # Filter out patents that already have JSON files if continue_markup is True
+    if continue_markup:
+        filtered_patents = []
+        for patent in patents:
+            filename = Path(CHECKPOINTS_FOLDER_BINDING, f"{patent.name}.json")
+            if filename.exists():
+                logger.info(f"Skipping {patent.name}, JSON file already exists.")
+                continue
+            filtered_patents.append(patent)
+        patents = filtered_patents
+    else:
+        filtered_patents = patents
 
     # Separate patents based on the is_too_short flag
     normal_patents = [p for p in patents if not p.is_too_short]

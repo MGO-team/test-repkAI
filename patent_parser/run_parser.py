@@ -29,6 +29,7 @@ from config import (
     CHUNKS,
     USE_PARALLEL,
     BATCH_SIZE,
+    CONTINUE_MARKUP,
 )
 
 
@@ -137,7 +138,9 @@ def main(start_from=None):
                 else:
                     loop.run_until_complete(
                         run_markup_async(
-                            patents=patents_batch, checkpoints_folder=CHECKPOINTS_FOLDER
+                            patents=patents_batch,
+                            checkpoints_folder=CHECKPOINTS_FOLDER,
+                            continue_markup=CONTINUE_MARKUP,
                         )
                     )
         finally:
