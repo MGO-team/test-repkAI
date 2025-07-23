@@ -42,6 +42,7 @@ class Patent:
     local_path: Path
     full_text: str = field(default="", repr=False)
     full_text_len: int = 0
+    n_pages: int = 0
     chunks: list[str] = field(default_factory=list, repr=False)
     chunk_size: int = INITIAL_PDF_CHUNK_SIZE
     chunk_overlaps: int = CHUNK_OVERLAPS
@@ -79,17 +80,21 @@ def convert_pdf_to_text(path_to_pdf: Path | str):
             logger.warning(f"error reading pdf {path_to_pdf}")
             logger.warning(e)
             raise PdfReadingError
-        return "".join([page for page in pdf_text])
+        return {
+            "full_text": "".join([page for page in pdf_text]),
+            "n_pages": len(pdf_text),
+        }
 
 
 def parse_pdf_to_patent(pdf_path: Path):
     """Reads patent pdf to patent object"""
     try:
+        pdf_text_info = convert_pdf_to_text(pdf_path)
         return Patent(
             name=pdf_path.stem,
             country=pdf_path.name[:2],
             local_path=pdf_path,
-            full_text=convert_pdf_to_text(pdf_path),
+            full_text=pdf_text_info["full_text"],
         )
 
     except PdfReadingError as e:

@@ -4,6 +4,7 @@ from config_logging import setup_logging
 from preprocessing import run_preprocessing, download_ftp_files
 from collect_patents import collect_pdf_links, download_patent_data
 from parse_pdfs import parse_pdfs_in_dir
+from run_binding_markup import run_markup
 from config import (
     # DATA_FOLDER,
     CHECKPOINTS_FOLDER,
@@ -71,6 +72,9 @@ def main():
             "patent_pdfs",
         )
     )
+
+    logger.info("Marking regions of interest...")
+    run_markup()
 
     logger.info("Finished parsing!")
 
