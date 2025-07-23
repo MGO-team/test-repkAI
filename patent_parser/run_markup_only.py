@@ -77,7 +77,7 @@ def main():
     # )
 
     logger.info("Marking regions of interest...")
-    run_markup()
+    run_markup(CHECKPOINTS_FOLDER)
 
     logger.info("Finished parsing!")
 
