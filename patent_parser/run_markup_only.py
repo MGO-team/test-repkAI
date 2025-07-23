@@ -26,7 +26,7 @@ from run_binding_markup import run_markup
 # HEADERS,
 # )
 
-CHECKPOINTS_FOLDER = Path("/home/alex/dev/test-repkAI/data/checkpoints_random_42")
+CHECKPOINTS_FOLDER = Path("/home/alex/dev/test-repkAI/data/that_sample")
 
 
 def main():

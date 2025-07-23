@@ -81,8 +81,9 @@ def ask_llm(
 
 
 system_prompt = "You are an expert in structural biology, chemoinformatics and patents"
+ch_text = ""
 content_template = (
-    f"Here is a fragment of a patent: {0}. It was autorecognized, so it might have some typos. "
+    "Here is a fragment of a patent. It was autorecognized, so it might have some typos. "
     + "Your task is to define if this fragment has any data on molecule binding with protein. "
     + "Pay special attention to values like: Ki (nM), IC50 (nM), Kd (nM), EC50 (nM)"
     + "You have to return your verdict as a valid json string has_binding_info: true|false. Only json, not other data! Do not use markdown formatting!"
@@ -101,8 +102,10 @@ def run_markup(checkpoints_folder: Path = CHECKPOINTS_FOLDER):  # TODO
             logger.info(
                 f"patent={patent.name}, chunk={indx}, pos={chunk.start, chunk.end}"
             )
-            content = content_template.format(chunk.text)
+            content = content_template + f"Here is a fragment of a patent: {chunk.text}"
+            # print(content)
             res = ask_llm(content, system_prompt, data_model=True)
+            # print(res)
             if "error" not in res:
                 if "has_binding_info" in res:
                     chunk.has_binding_info = res["has_binding_info"]
