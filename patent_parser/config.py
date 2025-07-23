@@ -4,10 +4,11 @@ from pathlib import Path
 
 # Paths
 DATA_FOLDER = "data"
-CHECKPOINTS_FOLDER = Path(DATA_FOLDER, "checkpoints_random_229_subset")
+CHECKPOINTS_FOLDER = Path(DATA_FOLDER, "checkpoints_random_505")
 
 # Set up pdf reading
 INITIAL_PDF_CHUNK_SIZE = 10000
+MIN_PDF_TEXT_LENGTH = INITIAL_PDF_CHUNK_SIZE
 CHUNK_OVERLAPS = 2
 
 CHEMBL_FOLDER = Path(DATA_FOLDER, "ChEMBL")
