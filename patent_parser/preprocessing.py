@@ -104,7 +104,7 @@ def extract_relevant_patents(
         ) | chunk["cpc"].astype(str).str.contains("A61K|A61P", regex=True, na=False)
         chm = chunk[mask]
         dfs.append(chm)
-        logger.info(f"chunk{i}, mask_len={len(chm)}, dfs={len(dfs)}")
+        logger.debug(f"chunk{i}, mask_len={len(chm)}, dfs={len(dfs)}")
 
     return pd.concat(dfs, ignore_index=True)
 
@@ -126,7 +126,7 @@ def extract_compound_ids_by_patent(
 
         filtered = df[df["patent_id"].isin(patent_id_set)]
         if len(filtered) > 0:
-            logger.info(f"chunk{i}, mask_len={len(filtered)}, dfs={len(dfs)}")
+            logger.debug(f"chunk{i}, mask_len={len(filtered)}, dfs={len(dfs)}")
             dfs.append(filtered)
 
     return pd.concat(dfs, ignore_index=True)
@@ -150,7 +150,7 @@ def extract_compounds_by_ids(
 
         filtered = df[df["id"].isin(compounds_id_set)]
         if len(filtered) > 0:
-            logger.info(f"chunk{i}, mask_len={len(filtered)}, dfs={len(dfs)}")
+            logger.debug(f"chunk{i}, mask_len={len(filtered)}, dfs={len(dfs)}")
             dfs.append(filtered)
 
     return pd.concat(dfs, ignore_index=True)
