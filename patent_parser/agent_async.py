@@ -117,6 +117,9 @@ async def process_patent_chunk(chunk_text: str) -> dict[str, Any]:
         try:
 
             result = await asyncio.wait_for(agent.arun(f_prompt), timeout=AGENT_TIMEOUT)
+            if "action" in result:
+                if result["action"] == "Final Answer":
+                    result = result["action_input"]
             logger.info(f"Result {result}")
 
         except asyncio.TimeoutError:
