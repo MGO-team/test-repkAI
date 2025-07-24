@@ -51,6 +51,7 @@ BATCH_SIZE = 20
 # AI agent
 AGENT_TIMEOUT = 1000
 
+
 LOG_DIR = Path(__file__).parent.parent / "logs"
 
 STEPS = [
