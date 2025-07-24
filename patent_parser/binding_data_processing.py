@@ -29,6 +29,7 @@ def parse_patent_json(json_file_path: Path) -> Patent:
         chunk_overlaps=data.get("chunk_overlaps", CHUNK_OVERLAPS),
         has_binding_info=data.get("has_binding_info", False),
         is_too_short=(len(data.get("full_text", False)) < MIN_PDF_TEXT_LENGTH),
+        chunks_with_binding_info=data.get("chunks_with_binding_info", CHUNK_OVERLAPS),
     )
 
     return patent

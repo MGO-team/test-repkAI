@@ -94,6 +94,8 @@ async def process_chunk(patent, chunk, indx):
             chunk.has_binding_info = res["has_binding_info"]
             if chunk.has_binding_info:
                 patent.has_binding_info = True
+                chunk.has_binding_info = True
+                patent.chunks_with_binding_info.append(indx)
         else:
             logger.info(f"Some strange output in {patent.name}: {res.keys()}")
     logger.info(res)
