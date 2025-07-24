@@ -1,0 +1,184 @@
+import json
+import aiofiles
+from typing import Any, List
+from langchain.agents import Tool, initialize_agent, AgentType
+from langchain.prompts import PromptTemplate
+from langchain.chat_models import ChatOpenAI
+import logging
+import os
+import asyncio
+from dotenv import load_dotenv
+from pathlib import Path
+
+from parse_pdfs import Patent
+from prot_fasta_parser import get_uniprot_fasta_by_gene
+from smiles_parser import get_smiles_by_name
+
+from config import CHECKPOINTS_FOLDER
+
+# Load environment variables
+load_dotenv()
+logger = logging.getLogger(__name__)
+
+API_KEY = os.getenv("LLM_API_KEY")
+BASE_URL = os.getenv("LLM_BASE_URL")
+MODEL = os.getenv("MODEL")
+
+MAX_CONCURRENT_CONNECTIONS = 6
+semaphore = asyncio.Semaphore(MAX_CONCURRENT_CONNECTIONS)
+
+# Initialize async LLM
+llm = ChatOpenAI(
+    model=MODEL,
+    openai_api_key=API_KEY,
+    openai_api_base=BASE_URL,
+    temperature=0.0,
+)
+
+
+# Async versions of tools with concurrency control
+async def smiles_tool(name: str) -> str:
+    async with semaphore:
+        # If get_smiles_by_name is sync, run in thread to prevent blocking
+        result = await asyncio.to_thread(get_smiles_by_name, name)
+        return result or "Not found"
+
+
+async def uniprot_tool(gene_name: str) -> str:
+    async with semaphore:
+        # If get_uniprot_fasta_by_gene is sync, run in thread to prevent blocking
+        result = await asyncio.to_thread(get_uniprot_fasta_by_gene, gene_name)
+        return result or "Not found"
+
+
+# Define tools using async functions
+tools = [
+    Tool(
+        name="GetSMILES",
+        func=smiles_tool,
+        description="Use this to convert a ligand name into SMILES notation. Returns 'Not found' if unsuccessful.",
+        coroutine=smiles_tool,
+    ),
+    Tool(
+        name="GetFASTA",
+        func=uniprot_tool,
+        description="Use this to convert a protein name into a FASTA amino acid sequence. Returns 'Not found' if unsuccessful.",
+        coroutine=uniprot_tool,
+    ),
+]
+
+prompt_template = """
+You are an expert cheminformatics and pharmacology data extractor. Your task is to analyze patent text and extract structured binding data.
+
+You are given a part of a text from a patent {text}.
+
+INSTRUCTIONS:
+1. Identify ligand mentions (chemical names, references to chemical names (this can be 'example', 'compound', etc.))
+2. Determine the ligand name
+3. Determine protein name
+4. Extract binding constants: Ki, IC50, Kd, EC50 (in nM)
+5. Extract assay description
+6. Use the GetSMILES tool to convert ligand names to SMILES notation
+7. Use the GetFASTA tool to convert protein names to FASTA sequences
+
+RETURN ONLY A VALID JSON OBJECT with these keys:
+
+"Ki_nM": "value or null",
+"IC50_nM": "value or null", 
+"Kd_nM": "value or null",
+"EC50_nM": "value or null",
+"assay_description": "brief description of how binding was measured",
+"ligand_name": "identified ligand name",
+"ligand_SMILES": "SMILES notation from GetSMILES tool or null",
+"protein_name": "identified protein name", 
+"protein_FASTA": "FASTA sequence from GetFASTA tool or null"
+
+CRITICAL RULES:
+- Only extract values that are explicitly stated with units (nM, μM, etc.)
+- Convert units appropriately (1 μM = 1000 nM)
+- Be conservative - only report high confidence data
+- Return ONLY the JSON, no other text
+- DO NOT USE MARKDOWN
+- Use the provided tools when you have identified ligand or protein names
+"""
+
+prompt = PromptTemplate(template=prompt_template, input_variables=["text"])
+
+# Initialize async agent
+agent = initialize_agent(
+    tools,
+    llm,
+    agent=AgentType.ZERO_SHOT_REACT_DESCRIPTION,
+    verbose=True,
+    handle_parsing_errors=True,
+)
+
+
+async def process_patent_chunk(chunk_text: str, full_text: str) -> dict[str, Any]:
+    try:
+        f_prompt = prompt.format(text=chunk_text)
+        result = await agent.arun(f_prompt)
+        result = result.strip().strip("```json").strip("```")
+        intermediate_data = json.loads(result)
+
+        final_output = {
+            "Ki (nM)": intermediate_data.get("Ki_nM"),
+            "IC50 (nM)": intermediate_data.get("IC50_nM"),
+            "Kd (nM)": intermediate_data.get("Kd_nM"),
+            "EC50 (nM)": intermediate_data.get("EC50_nM"),
+            "assay": intermediate_data.get("assay_description", ""),
+            "ligand_name": intermediate_data.get("ligand_name"),
+            "ligand_SMILES": intermediate_data.get("ligand_SMILES"),
+            "protein_name": intermediate_data.get("protein_name"),
+            "protein_FASTA": intermediate_data.get("protein_FASTA"),
+        }
+
+        return final_output
+
+    except Exception as e:
+        logger.warning(f"Error processing chunk: {e}")
+        return {}
+
+
+async def process_all_patents(
+    patents: List[Patent], output_dir: str = "patent_results"
+) -> List[dict[str, Any]]:
+    # Create output directory if it doesn't exist
+    output_path = Path(CHECKPOINTS_FOLDER, output_dir)
+    output_path.mkdir(exist_ok=True)
+
+    all_results = []
+
+    for patent in patents:
+        if not patent.has_binding_info:
+            continue
+
+        patent_results = []
+        tasks = [
+            process_patent_chunk(chunk.text, patent.full_text)
+            for chunk in patent.chunks
+            # if chunk.has_binding_info
+        ]
+        chunk_results = await asyncio.gather(*tasks, return_exceptions=True)
+
+        for res in chunk_results:
+            if isinstance(res, Exception):
+                logger.warning(f"Exception during chunk processing: {res}")
+                continue
+            if res:
+                patent_results.append(res)
+
+        # Save results for this patent immediately as JSON using async files
+        if patent_results:
+            patent_output_file = output_path / f"{patent.name}.json"
+            async with aiofiles.open(patent_output_file, "w", encoding="utf-8") as f:
+                await f.write(json.dumps(patent_results, indent=2, ensure_ascii=False))
+
+            # Also add to the overall results list
+            all_results.extend(patent_results)
+
+            logger.info(f"Saved {len(patent_results)} results for patent {patent.name}")
+        else:
+            logger.info(f"No binding data found for patent {patent.name}")
+
+    return all_results

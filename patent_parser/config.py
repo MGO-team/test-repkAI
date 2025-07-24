@@ -4,7 +4,9 @@ from pathlib import Path
 
 # Paths
 DATA_FOLDER = "data"
-CHECKPOINTS_FOLDER = Path(DATA_FOLDER, "checkpoints_random_505")
+CHECKPOINTS_FOLDER = Path(
+    DATA_FOLDER, "/home/alex/dev/test-repkAI/data/checkpoints_with_binding_data"
+)
 
 # Set up pdf reading
 INITIAL_PDF_CHUNK_SIZE = 10000

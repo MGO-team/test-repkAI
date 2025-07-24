@@ -46,6 +46,7 @@ class Patent:
     full_text_len: int = 0
     n_pages: int = 0
     chunks: list[str] = field(default_factory=list, repr=False)
+    chunks_with_binding_info: list[int] = field(default_factory=list)
     chunk_size: int = INITIAL_PDF_CHUNK_SIZE
     chunk_overlaps: int = CHUNK_OVERLAPS
 
