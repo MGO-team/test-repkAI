@@ -11,3 +11,5 @@ dependencies:
   - conda-forge::python-dotenv
   - conda-forge::openai
   - anaconda::aiofiles
+  - conda-forge::langchain
+  - conda-forge::langchain-community

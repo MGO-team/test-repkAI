@@ -9,6 +9,8 @@ from collect_patents import collect_pdf_links, download_patent_data
 from parse_pdfs import parse_pdfs
 from run_binding_markup import run_markup
 from run_binding_markup_async import run_markup_async
+from binding_data_processing import extract_patents_with_binding_data
+from agent_async import process_all_patents
 from utils import batch_list
 
 from config import (
@@ -33,18 +35,9 @@ from config import (
 )
 
 
-def main(start_from=None):
+async def main(start_from=None):
     setup_logging()
     logger = logging.getLogger(__name__)
-
-    STEPS = [
-        "download_chembl",
-        "download_surechembl",
-        "preprocessing",
-        "collect_pdf_links",
-        "download_patents",
-        "parse_and_markup",
-    ]
 
     def should_run(step_name):
         if not start_from:
@@ -118,8 +111,7 @@ def main(start_from=None):
         total_batches = len(pdf_batches)
 
         if USE_PARALLEL:
-            loop = asyncio.new_event_loop()
-            asyncio.set_event_loop(loop)
+            loop = asyncio.get_event_loop()
 
         try:
             for idx, batch in enumerate(pdf_batches, start=1):
@@ -136,37 +128,41 @@ def main(start_from=None):
                         patents=patents_batch, CHECKPOINTS_FOLDER=CHECKPOINTS_FOLDER
                     )
                 else:
-                    loop.run_until_complete(
-                        run_markup_async(
-                            patents=patents_batch,
-                            checkpoints_folder=CHECKPOINTS_FOLDER,
-                            continue_markup=CONTINUE_MARKUP,
-                        )
+                    await run_markup_async(
+                        patents=patents_batch,
+                        checkpoints_folder=CHECKPOINTS_FOLDER,
+                        continue_markup=CONTINUE_MARKUP,
                     )
         finally:
-            if USE_PARALLEL:
-                loop.close()
+            if USE_PARALLEL and loop.is_running():
+                pass  # Don't close the loop if it's still being used
+
+    if should_run("extract_patents_with_binding"):
+        logger.info("Extracting patents with binding data from jsons...")
+        patents_with_binding = extract_patents_with_binding_data(
+            Path(CHECKPOINTS_FOLDER, "json_binding_data")
+        )
+
+        logger.info(len(patents_with_binding))
+        results = await process_all_patents(patents_with_binding)  # This is now async
+        logger.warning(results)
 
     logger.info("Finished parsing!")
 
 
 if __name__ == "__main__":
+    from config import STEPS
+
     parser = argparse.ArgumentParser(
         description="Run pipeline with optional start step."
     )
     parser.add_argument(
         "-s",
         "--start_from",
-        choices=[
-            "download_chembl",
-            "download_surechembl",
-            "preprocessing",
-            "collect_pdf_links",
-            "download_patents",
-            "parse_and_markup",
-        ],
+        choices=STEPS,
         help="Start execution from this step.",
     )
     args = parser.parse_args()
 
-    main(start_from=args.start_from)
+    # Run the async main function
+    asyncio.run(main(start_from=args.start_from))
