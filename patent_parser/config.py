@@ -5,13 +5,13 @@ from pathlib import Path
 # Paths
 DATA_FOLDER = "data"
 CHECKPOINTS_FOLDER = Path(
-    DATA_FOLDER, "/home/alex/dev/test-repkAI/data/checkpoints_with_binding_data"
+    DATA_FOLDER, "/home/alex/dev/test-repkAI/data/checkpoints_random_1234567"
 )
 
 # Set up pdf reading
-INITIAL_PDF_CHUNK_SIZE = 10000
+INITIAL_PDF_CHUNK_SIZE = 3000 # size of a chunk in symbols
 MIN_PDF_TEXT_LENGTH = INITIAL_PDF_CHUNK_SIZE
-CHUNK_OVERLAPS = 2
+CHUNK_OVERLAPS = 5
 
 CHEMBL_FOLDER = Path(DATA_FOLDER, "ChEMBL")
 SURE_CHEMBL_FOLDER = Path(DATA_FOLDER, "SureChEMBL")
@@ -32,10 +32,10 @@ DOWNLOAD_SURE_CHEMBL = True
 
 # Preprocessing
 ### Set random subsample
-SEED = 345
+SEED = 1234567
 USE_RANDOM_CHUNKS = True
-N_RANDOM_CHUNKS = 3
-N_RANDOM_PATENTS = 20
+N_RANDOM_CHUNKS = 1
+N_RANDOM_PATENTS = 10
 
 ### Use defined chunks
 CHUNKS: list[int] | None = []
@@ -49,7 +49,7 @@ USE_PARALLEL = True
 BATCH_SIZE = 20
 
 # AI agent
-AGENT_TIMEOUT = 10
+AGENT_TIMEOUT = 1000
 
 LOG_DIR = Path(__file__).parent.parent / "logs"
 
