@@ -2,7 +2,7 @@ import json
 import aiofiles
 from typing import Any, List
 from langchain.agents import Tool, initialize_agent, AgentType
-from langchain.prompts import PromptTemplate
+# from langchain.prompts import PromptTemplate
 from langchain.chat_models import ChatOpenAI
 import logging
 import os
@@ -33,6 +33,7 @@ llm = ChatOpenAI(
     openai_api_key=API_KEY,
     openai_api_base=BASE_URL,
     temperature=0.0,
+    max_tokens=4096, 
 )
 
 
@@ -67,7 +68,7 @@ tools = [
     ),
 ]
 
-prompt_template = """
+prompt = """
 You are an expert cheminformatics and pharmacology data extractor. Your task is to analyze patent text and extract structured binding data.
 
 You are given a part of a text from a patent {text}.
@@ -99,26 +100,34 @@ CRITICAL RULES:
 - Be conservative - only report high confidence data
 - Return ONLY the JSON, no other text
 - DO NOT USE MARKDOWN
+- DO NOT include "Thought:" or "Action:" in your response
 - Use the provided tools when you have identified ligand or protein names
 """
 
-prompt = PromptTemplate(template=prompt_template, input_variables=["text"])
-
-# Initialize async agent
-agent = initialize_agent(
-    tools,
-    llm,
-    agent=AgentType.ZERO_SHOT_REACT_DESCRIPTION,
-    verbose=True,
-    handle_parsing_errors=True,
-)
-
-
-async def process_patent_chunk(chunk_text: str, full_text: str) -> dict[str, Any]:
+async def process_patent_chunk(chunk_text: str) -> dict[str, Any]:
     try:
+        agent = initialize_agent(
+            tools,
+            llm,
+            agent=AgentType.STRUCTURED_CHAT_ZERO_SHOT_REACT_DESCRIPTION,
+            # verbose=True,
+            handle_parsing_errors=True,
+        )
         f_prompt = prompt.format(text=chunk_text)
-        result = await agent.arun(f_prompt)
-        result = result.strip().strip("```json").strip("```")
+        try:
+            result = await asyncio.wait_for(agent.arun(f_prompt), timeout=600)
+        except asyncio.TimeoutError:
+            logger.warning("Agent timed out processing chunk")
+            return {}
+        
+        # Clean the result
+        result = result.strip()
+        
+        # Remove markdown code blocks if present
+        if result.startswith("```"):
+            result = result.strip("```json").strip("```")
+        
+        # Parse JSON
         intermediate_data = json.loads(result)
 
         final_output = {
@@ -131,10 +140,26 @@ async def process_patent_chunk(chunk_text: str, full_text: str) -> dict[str, Any
             "ligand_SMILES": intermediate_data.get("ligand_SMILES"),
             "protein_name": intermediate_data.get("protein_name"),
             "protein_FASTA": intermediate_data.get("protein_FASTA"),
+            "raw_result": result,
         }
 
         return final_output
 
+    except json.JSONDecodeError as e:
+        logger.warning(f"JSON parsing error processing chunk: {e}")
+        logger.warning(f"Raw result was: {result}")
+        return {
+            "Ki (nM)": None,
+            "IC50 (nM)": None,
+            "Kd (nM)": None,
+            "EC50 (nM)": None,
+            "assay": None,
+            "ligand_name": None,
+            "ligand_SMILES": None,
+            "protein_name": None,
+            "protein_FASTA": None,
+            "raw_result": result,
+        }
     except Exception as e:
         logger.warning(f"Error processing chunk: {e}")
         return {}
@@ -155,9 +180,9 @@ async def process_all_patents(
 
         patent_results = []
         tasks = [
-            process_patent_chunk(chunk.text, patent.full_text)
+            process_patent_chunk(chunk.text)
             for chunk in patent.chunks
-            # if chunk.has_binding_info
+            if chunk.has_binding_info
         ]
         chunk_results = await asyncio.gather(*tasks, return_exceptions=True)
 
