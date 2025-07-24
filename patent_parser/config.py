@@ -55,6 +55,7 @@ STEPS = [
     "collect_pdf_links",
     "download_patents",
     "parse_and_markup",
+    "extract_patents_with_binding",
 ]
 
 CONTINUE_MARKUP = True

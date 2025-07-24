@@ -9,6 +9,7 @@ from collect_patents import collect_pdf_links, download_patent_data
 from parse_pdfs import parse_pdfs
 from run_binding_markup import run_markup
 from run_binding_markup_async import run_markup_async
+from binding_data_processing import extract_patents_with_binding_data
 from utils import batch_list
 
 from config import (
@@ -36,15 +37,6 @@ from config import (
 def main(start_from=None):
     setup_logging()
     logger = logging.getLogger(__name__)
-
-    STEPS = [
-        "download_chembl",
-        "download_surechembl",
-        "preprocessing",
-        "collect_pdf_links",
-        "download_patents",
-        "parse_and_markup",
-    ]
 
     def should_run(step_name):
         if not start_from:
@@ -147,24 +139,27 @@ def main(start_from=None):
             if USE_PARALLEL:
                 loop.close()
 
+    if should_run("extract_patents_with_binding"):
+        logger.info("Extracting patents with binding data from jsons...")
+        patents_with_binding = extract_patents_with_binding_data(
+            Path(CHECKPOINTS_FOLDER, "json_binding_data")
+        )
+
+        print(len(patents_with_binding))
+
     logger.info("Finished parsing!")
 
 
 if __name__ == "__main__":
+    from config import STEPS
+
     parser = argparse.ArgumentParser(
         description="Run pipeline with optional start step."
     )
     parser.add_argument(
         "-s",
         "--start_from",
-        choices=[
-            "download_chembl",
-            "download_surechembl",
-            "preprocessing",
-            "collect_pdf_links",
-            "download_patents",
-            "parse_and_markup",
-        ],
+        choices=STEPS,
         help="Start execution from this step.",
     )
     args = parser.parse_args()
