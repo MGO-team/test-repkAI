@@ -1,3 +1,5 @@
+# REPKAI - REtrieve Patent (K)Constants from pharmaceutical patents with AI-agents
+
 ## Introduction
 
 The pharmaceutical and biotech industries generate vast amounts of valuable bioactivity data that remains locked within patent documents. Binding affinity measurements such as *Ki*, *Kd*, *IC50*, *EC50* represent fundamental pharmacological parameters that quantify molecular interactions between drug candidates and their biological targets. While commercial databases like Reaxys and GOSTAR provide structured access to some of this information, their proprietary nature and high costs create significant barriers for academic researchers. This project develops an AI-powered pipeline to extract structured bioactivity data from chemical patents, creating an open-access alternative.
