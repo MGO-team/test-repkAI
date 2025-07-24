@@ -48,6 +48,9 @@ MAX_CONCURRENT_REQUESTS = 6
 USE_PARALLEL = True
 BATCH_SIZE = 20
 
+# AI agent
+AGENT_TIMEOUT = 10
+
 LOG_DIR = Path(__file__).parent.parent / "logs"
 
 STEPS = [

@@ -14,7 +14,7 @@ from parse_pdfs import Patent
 from prot_fasta_parser import get_uniprot_fasta_by_gene
 from smiles_parser import get_smiles_by_name
 
-from config import CHECKPOINTS_FOLDER
+from config import CHECKPOINTS_FOLDER, AGENT_TIMEOUT
 
 # Load environment variables
 load_dotenv()
@@ -115,7 +115,10 @@ async def process_patent_chunk(chunk_text: str) -> dict[str, Any]:
         )
         f_prompt = prompt.format(text=chunk_text)
         try:
-            result = await asyncio.wait_for(agent.arun(f_prompt), timeout=600)
+
+            result = await asyncio.wait_for(agent.arun(f_prompt), timeout=AGENT_TIMEOUT)
+            logger.info(f"Result {result}")
+
         except asyncio.TimeoutError:
             logger.warning("Agent timed out processing chunk")
             return {}
@@ -168,14 +171,16 @@ async def process_patent_chunk(chunk_text: str) -> dict[str, Any]:
 async def process_all_patents(
     patents: List[Patent], output_dir: str = "patent_results"
 ) -> List[dict[str, Any]]:
-    # Create output directory if it doesn't exist
-    output_path = Path(CHECKPOINTS_FOLDER, output_dir)
-    output_path.mkdir(exist_ok=True)
+    # Ensure base checkpoints folder exists
+    output_path = Path(CHECKPOINTS_FOLDER) / output_dir
+    output_path.mkdir(parents=True, exist_ok=True)
 
     all_results = []
 
     for patent in patents:
+        logger.info(f"Processing patent: {patent.name}")
         if not patent.has_binding_info:
+            logger.info(f"Skipping patent {patent.name}, no binding info")
             continue
 
         patent_results = []
@@ -184,6 +189,11 @@ async def process_all_patents(
             for chunk in patent.chunks
             if chunk.has_binding_info
         ]
+
+        if not tasks:
+            logger.info(f"No valid chunks to process in patent {patent.name}")
+            continue
+
         chunk_results = await asyncio.gather(*tasks, return_exceptions=True)
 
         for res in chunk_results:
@@ -193,17 +203,14 @@ async def process_all_patents(
             if res:
                 patent_results.append(res)
 
-        # Save results for this patent immediately as JSON using async files
         if patent_results:
             patent_output_file = output_path / f"{patent.name}.json"
             async with aiofiles.open(patent_output_file, "w", encoding="utf-8") as f:
                 await f.write(json.dumps(patent_results, indent=2, ensure_ascii=False))
 
-            # Also add to the overall results list
             all_results.extend(patent_results)
-
             logger.info(f"Saved {len(patent_results)} results for patent {patent.name}")
         else:
-            logger.info(f"No binding data found for patent {patent.name}")
+            logger.warning(f"No binding data extracted for patent {patent.name}")
 
     return all_results
