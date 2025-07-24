@@ -4,10 +4,11 @@ from pathlib import Path
 
 # Paths
 DATA_FOLDER = "data"
-CHECKPOINTS_FOLDER = Path(DATA_FOLDER, "checkpoints_random_229_subset")
+CHECKPOINTS_FOLDER = Path(DATA_FOLDER, "checkpoints_random_505")
 
 # Set up pdf reading
 INITIAL_PDF_CHUNK_SIZE = 10000
+MIN_PDF_TEXT_LENGTH = INITIAL_PDF_CHUNK_SIZE
 CHUNK_OVERLAPS = 2
 
 CHEMBL_FOLDER = Path(DATA_FOLDER, "ChEMBL")
@@ -45,7 +46,15 @@ MAX_CONCURRENT_REQUESTS = 6
 USE_PARALLEL = True
 BATCH_SIZE = 20
 
-USE_DOWNLOADED_PATENTS = True
-
-
 LOG_DIR = Path(__file__).parent.parent / "logs"
+
+STEPS = [
+    "download_chembl",
+    "download_surechembl",
+    "preprocessing",
+    "collect_pdf_links",
+    "download_patents",
+    "parse_and_markup",
+]
+
+CONTINUE_MARKUP = True

@@ -6,7 +6,7 @@ from typing import Any
 
 import pdftotext
 
-from config import INITIAL_PDF_CHUNK_SIZE, CHUNK_OVERLAPS
+from config import INITIAL_PDF_CHUNK_SIZE, CHUNK_OVERLAPS, MIN_PDF_TEXT_LENGTH
 
 
 logger = logging.getLogger(__name__)
@@ -41,6 +41,7 @@ class Patent:
     country: str
     local_path: Path
     has_binding_info: bool = False
+    is_too_short: bool = False
     full_text: str = field(default="", repr=False)
     full_text_len: int = 0
     n_pages: int = 0
@@ -58,6 +59,12 @@ class Patent:
             raise ValueError(
                 f"chunk_size ({size}) must be >= chunk_overlaps ({overlaps})"
             )
+
+        if text_len < MIN_PDF_TEXT_LENGTH:
+            self.is_too_short = True
+            # If too short, don't bother creating chunks
+            self.chunks = []
+            return
 
         chunks: list[Chunk] = []
         for start in range(0, text_len, step):
@@ -96,6 +103,7 @@ def parse_pdf_to_patent(pdf_path: Path):
             country=pdf_path.name[:2],
             local_path=pdf_path,
             full_text=pdf_text_info["full_text"],
+            n_pages=pdf_text_info["n_pages"],
         )
 
     except PdfReadingError as e:

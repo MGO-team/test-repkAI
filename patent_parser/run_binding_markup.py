@@ -90,7 +90,9 @@ content_template = (
 )
 
 
-def run_markup(patents: list[Patent], checkpoints_folder: Path = CHECKPOINTS_FOLDER, limit=None):  # TODO
+def run_markup(
+    patents: list[Patent], checkpoints_folder: Path = CHECKPOINTS_FOLDER, limit=None
+):  # TODO
     results = []
     CHECKPOINTS_FOLDER_BINDING = Path(checkpoints_folder, "json_binding_data")
     CHECKPOINTS_FOLDER_BINDING.mkdir(exist_ok=True, parents=True)
@@ -114,8 +116,14 @@ def run_markup(patents: list[Patent], checkpoints_folder: Path = CHECKPOINTS_FOL
                     logger.info(f"some strange output in {patent.name}: {res.keys()}")
 
             logger.info(res)
-        
-        results.append({"name": patent.name, "path": str(patent.local_path), "has_binding_info": patent.has_binding_info})
+
+        results.append(
+            {
+                "name": patent.name,
+                "path": str(patent.local_path),
+                "has_binding_info": patent.has_binding_info,
+            }
+        )
         patent_out = patent
         patent_out.local_path = str(patent_out.local_path)
         d = dataclasses.asdict(patent_out)
@@ -126,4 +134,4 @@ def run_markup(patents: list[Patent], checkpoints_folder: Path = CHECKPOINTS_FOL
     json_binding_summary_path = Path(CHECKPOINTS_FOLDER_SUMMARY, "binding_summary.json")
     logger.info(f"Recording initial markup resulst to: {json_binding_summary_path}")
     with open(json_binding_summary_path, "w") as f:
-            json.dump(results, f, indent=4)
+        json.dump(results, f, indent=4)
