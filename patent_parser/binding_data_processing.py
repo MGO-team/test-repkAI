@@ -54,7 +54,12 @@ def extract_patents_with_binding_data(folder_path: Path) -> list[Patent]:
             patent = parse_patent_json(json_file)
 
             if patent.has_binding_info:
+                indxs_chunks_with_binding_info = patent.chunks_with_binding_info
+                for indx, chunk in enumerate(patent.chunks):
+                    if indx in indxs_chunks_with_binding_info:
+                        chunk.has_binding_info = True
                 patents_with_binding.append(patent)
+
 
         except Exception as e:
             print(f"Error processing {json_file}: {e}")
