@@ -115,8 +115,10 @@ async def process_patent_chunk(chunk_text: str) -> dict[str, Any]:
         )
         f_prompt = prompt.format(text=chunk_text)
         try:
+
             result = await asyncio.wait_for(agent.arun(f_prompt), timeout=AGENT_TIMEOUT)
             logger.info(f"Result {result}")
+
         except asyncio.TimeoutError:
             logger.warning("Agent timed out processing chunk")
             return {}
